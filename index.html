@@ -1,142 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Helicóptero al Rescate</title>
-    <style>
-        body {
-            margin: 0;
-            background-image: url('img/desierto_background.webp'); /* Imagen completa (volcán + arena) */
-            background-size: cover;
-            background-position: top; /* Asegura que el volcán esté en la parte superior */
-            height: 100vh;
-            overflow: hidden;
-            position: relative; /* Necesario para los elementos absolutamente posicionados */
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helicóptero al Rescate</title>
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      background-image: url('img/desierto_background.webp');
+      background-size: cover;
+      background-position: top;
+      background-repeat: no-repeat;
+      position: relative;
+    }
 
-        #arena {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 50%; /* Tamaño de la parte de la arena en la parte inferior */
-            background-image: url('img/arena.png'); /* Imagen recortada de la arena */
-            background-size: cover;
-            background-position: bottom;
-        }
+    #intro {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 2;
+      color: rgb(218, 251, 71);
+    }
 
-        #intro {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
+    button {
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 20px;
+    }
 
-        button {
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+    button:hover {
+      background-color: #218838;
+    }
 
-        button:hover {
-            background-color: #218838;
-        }
+    .personaje {
+      width: 70px;
+      height: 85px;
+      position: absolute;
+      cursor: pointer;
+      background-size: cover;
+      background-repeat: no-repeat;
+      animation-name: desaparecer;
+      animation-play-state: paused;
+      animation-delay: 2s;
+      /*animation-duration: 10s;*/
+      animation-fill-mode: forwards;
+    }
 
-        .survivor {
-            width: 50px;
-            height: 50px;
-            position: absolute;
-        }
+    .helicoptero {
+      width: 200px;
+      height: 90px;
+      background-image: url('img/helicoptero7.gif');
+      background-size: cover;
+      position: absolute;
+      top: 100px;
+      left: 0;
+      /*animation: moverHelicoptero 10s linear infinite;*/
+    }
 
-        #marker {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-size: 18px;
-            z-index: 1000;
-        }
+    @keyframes moverHelicoptero {
+      0% { left: 0; }
+      50% { left: calc(100vw - 200px); }
+      100% { left: 0; }
+    }
 
-        #rescued, #dead {
-            font-size: 18px;
-        }
-    </style>
+    @keyframes desaparecer {
+      0% { opacity: 1; }
+      95% { opacity: 1; }
+      99% { opacity: 0; }
+      100% { visibility: hidden; opacity: 0; }
+    }
+
+    #marker {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 18px;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
-    <div id="arena"></div> <!-- Esto representa la zona de la arena -->
-    
-    <div id="intro">
-        <h1 id="title">HELICÓPTERO AL RESCATE</h1>
-        <button onclick="startGame()">Play</button>
-    </div>
+  <!-- Sección de introducción -->
+  <div id="intro">
+    <h1 id="title">HELICÓPTERO AL RESCATE</h1>
+    <button onclick="startGame()">Play</button>
+  </div>
+  <!-- Sección para mostrar el marcador -->
+  <div id="marker">
+    <div id="rescued">Rescatados: 0</div>
+    <div id="dead">Fallecidos: 0</div>
+  </div>
 
-    <div id="marker">
-        <div id="rescued">Rescatados: 0</div>
-        <div id="dead">Fallecidos: 0</div>
-    </div>
+  <!-- Elemento de audio para el sonido del helicóptero -->
+  <audio id="helicopteroAudio" loop>
+    <source src="audio/audiohelicoptero_sonido.mp3" type="audio/mp3">
+  </audio>
 
-    <script>
-        let positions = [];
-        let rescuedCount = 0;
-        let deadCount = 0;
+  <script type="text/javascript">
+    let rescuedCount = 0;
+    let deadCount = 0;
+    let helicopteroEnVuelo = false;
+    var imagenes = [
+      "img/personaje1.png",
+      "img/tortuga.png",
+      "img/GOKU.gif",
+      "img/araña.gif"
+    ];
+    var rescuedElement = document.getElementById('rescued');
+    var deadElement = document.getElementById('dead');
+    let posicionesOcupadas = [];
+    var baseLeft = 0;
+    var baseTop = 100;
 
-        function startGame() {
-            document.getElementById('intro').style.display = 'none';
-            generateSurvivor(); // Llamamos a la función para empezar a generar supervivientes
-            setInterval(generateSurvivor, 3000); // Cada 3 segundos aparece un nuevo superviviente
+    function updateMarker() {
+      rescuedElement.textContent = `Rescatados: ${rescuedCount}`;
+      deadElement.textContent = `Fallecidos: ${deadCount}`;
+    }
+
+    function checkPositionOccupied(x, y, width, height) {
+      for (let i = 0; i < posicionesOcupadas.length; i++) {
+        let pos = posicionesOcupadas[i];
+        if (
+          x < pos.x + pos.width &&
+          x + width > pos.x &&
+          y < pos.y + pos.height &&
+          y + height > pos.y
+        ) {
+          return true;
         }
+      }
+      return false;
+    }
 
-        function updateMarker() {
-            document.getElementById('rescued').textContent = `Rescatados: ${rescuedCount}`;
-            document.getElementById('dead').textContent = `Fallecidos: ${deadCount}`;
+    function generarSupervivientes() {
+      var nuevo = document.createElement('div');
+      nuevo.className = 'personaje';
+      var indice = Math.floor(Math.random() * imagenes.length);
+      var imagenSeleccionada = imagenes[indice];
+      nuevo.style.backgroundImage = `url('${imagenSeleccionada}')`;
+
+      let width = 70;
+      let height = 100;
+      let intentos = 0;
+      let colision = true;
+
+      while (colision && intentos < 50) {
+        let x = Math.random() * (window.innerWidth - width);
+        let y = Math.random() * ((window.innerHeight / 2) - height) + (window.innerHeight / 2);
+
+        colision = checkPositionOccupied(x, y, width, height);
+        intentos++;
+
+        if (!colision) {
+          posicionesOcupadas.push({x, y, width, height});
+          nuevo.style.left = `${x}px`;
+          nuevo.style.top = `${y}px`;
+
+          document.body.insertAdjacentElement('beforeend', nuevo);
+          nuevo.addEventListener('click', seleccionarSuperviviente);
+
+          setTimeout(() => {
+            if (nuevo.parentElement && !nuevo.dataset.rescatado) {
+              nuevo.remove();
+              deadCount++;
+              updateMarker();
+            }
+          }, 10000);
         }
+      }
+    }
 
-        function generateSurvivor() {
-            const survivor = document.createElement('img');
-            survivor.classList.add('survivor');
-            survivor.src = 'img/survivor.png'; // Ruta de la imagen del superviviente
-        
-            const survivorSize = 50;
-            let x, y, overlap;
-            
-            do {
-                // Generamos una posición aleatoria dentro de la zona de la arena
-                x = Math.floor(Math.random() * (window.innerWidth - survivorSize)); // Aseguramos que el superviviente no se salga por la derecha
-                y = Math.floor(Math.random() * (window.innerHeight / 2 - survivorSize)) + window.innerHeight / 2; // Aseguramos que el superviviente no se salga por la parte inferior
-                overlap = positions.some(pos => Math.abs(pos.x - x) < survivorSize && Math.abs(pos.y - y) < survivorSize);
-            } while (overlap); // Si hay superposición, generamos nuevas coordenadas
+    function seleccionarSuperviviente(event) {
+      if (helicopteroEnVuelo) return;
+      var elemento = event.target;
+      if (!elemento.dataset.rescatado) {
+        rescuedCount++;
+        updateMarker();
+        elemento.dataset.rescatado = "true";
+        elemento.style.border = "5px solid green";
+        helicopteroEnVuelo = true;
+        var helicoptero = document.querySelector('.helicoptero');
+        helicoptero.style.animation = 'none';
+        helicoptero.style.transition = 'left 5s ease, top 5s ease';
+        var rescatadoRect = elemento.getBoundingClientRect();
+        helicoptero.style.left = rescatadoRect.left + "px";
+        helicoptero.style.top = rescatadoRect.top + "px";
 
-            positions.push({ x, y }); // Guardamos la nueva posición
+        setTimeout(() => {
+          elemento.remove();
+        }, 5000);
 
-            survivor.style.left = `${x}px`;
-            survivor.style.top = `${y}px`;
+        setTimeout(() => {
+          helicoptero.style.left = baseLeft + "px";
+          helicoptero.style.top = baseTop + "px";
 
-            document.body.appendChild(survivor);
+          setTimeout(() => {
+            helicoptero.style.transition = '';
+            //helicoptero.style.animation = 'moverHelicoptero 10s linear infinite';
+            helicopteroEnVuelo = false;
+          }, 5000);
+        }, 5000);
+      }
+    }
 
-            // Eliminamos al superviviente después de 5 segundos
-            setTimeout(function() {
-                survivor.remove();
-                
-                // Eliminar la posición del superviviente que murió
-                for (let i = 0; i < positions.length; i++) {
-                    if (positions[i].x === x && positions[i].y === y) {
-                        positions.splice(i, 1); // Elimina la posición en el índice 'i'
-                        break; // Salimos del bucle después de eliminar la posición
-                    }
-                }
-            
-                deadCount++; // Incrementamos el contador de muertos
-                updateMarker(); // Actualizamos el marcador
-            }, 10000);
-            
-        }
-    </script>
+    function startGame() {
+      document.getElementById('intro').style.display = 'none';
+      setInterval(generarSupervivientes, 5000);
+      var helicoptero = document.createElement('div');
+      helicoptero.className = 'helicoptero';
+      document.body.insertAdjacentElement('beforeend', helicoptero);
+
+      var sonidoHelicoptero = document.getElementById('helicopteroAudio');
+      sonidoHelicoptero.play();
+    }
+  </script>
 </body>
 </html>
