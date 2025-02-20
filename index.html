@@ -246,8 +246,12 @@
         }, 5000);
 
         setTimeout(() => {
-          helicoptero.style.left = baseIzquierdaX + "px";
-          helicoptero.style.top = baseIzquierdaY + "px";
+            // Calcular la posición central en la parte superior de la pantalla
+            var centroX = (window.innerWidth / 2) - (helicoptero.offsetWidth / 2);
+            var centroY = 50; // Puedes ajustar este valor según sea necesario
+      
+            helicoptero.style.left = centroX + "px";
+            helicoptero.style.top = centroY + "px";
 
           setTimeout(() => {
             helicoptero.style.transition = '';
