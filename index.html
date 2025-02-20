@@ -141,6 +141,7 @@
 
   <div class="base base-left"></div>
   <div class="base base-right" onclick="moverHelicopteroABase('right')"></div>
+  <div class="base base-left" onclick="moverHelicopteroABase('left')"></div>
 
   <audio id="helicopteroAudio" loop>
     <source src="audio/audiohelicoptero_sonido.mp3" type="audio/mp3">
@@ -150,17 +151,17 @@
     let cantidadRescatados = 0;
     let cantidadFallecidos = 0;
     let helicopteroEnVuelo = false;
-    const imagenes = [
+    var imagenes = [
       "img/personaje1.png",
       "img/tortuga.png",
       "img/GOKU.gif",
       "img/araña.gif"
     ];
-    const elementoRescatados = document.getElementById('rescued');
-    const elementoFallecidos = document.getElementById('dead');
+    var elementoRescatados = document.getElementById('rescued');
+    var elementoFallecidos = document.getElementById('dead');
     let posicionesOcupadas = [];
-    const baseIzquierdaX = 50;
-    const baseIzquierdaY = 100;
+    var baseIzquierdaX = 50;
+    var baseIzquierdaY = 100;
 
     // Actualiza el marcador en pantalla
     function actualizarMarcador() {
@@ -188,18 +189,18 @@
     function generarSupervivientes() {
       let nuevo = document.createElement('div');
       nuevo.className = 'personaje';
-      const indice = Math.floor(Math.random() * imagenes.length);
-      const imagenSeleccionada = imagenes[indice];
+      var indice = Math.floor(Math.random() * imagenes.length);
+      var imagenSeleccionada = imagenes[indice];
       nuevo.style.backgroundImage = `url('${imagenSeleccionada}')`;
 
-      const ancho = 70;
-      const alto = 100;
+      var ancho = 70;
+      var alto = 100;
       let intentos = 0;
       let colision = true;
 
       while (colision && intentos < 150) {
-        const x = Math.random() * (window.innerWidth - ancho);
-        const y = Math.random() * ((window.innerHeight / 2) - alto) + (window.innerHeight / 2);
+        var x = Math.random() * (window.innerWidth - ancho);
+        var y = Math.random() * ((window.innerHeight / 2) - alto) + (window.innerHeight / 2);
 
         colision = verificarPosicionOcupada(x, y, ancho, alto);
         intentos++;
@@ -226,17 +227,17 @@
     // Función que se ejecuta al hacer clic en un superviviente
     function seleccionarSuperviviente(evento) {
       if (helicopteroEnVuelo) return;
-      const elemento = evento.target;
+      var elemento = evento.target;
       if (!elemento.dataset.rescatado) {
         cantidadRescatados++;
         actualizarMarcador();
         elemento.dataset.rescatado = "true";
         elemento.style.border = "5px solid green";
         helicopteroEnVuelo = true;
-        const helicoptero = document.querySelector('.helicoptero');
+        var helicoptero = document.querySelector('.helicoptero');
         helicoptero.style.transition = 'left 5s ease, top 5s ease';
 
-        const rectRescatado = elemento.getBoundingClientRect();
+        var rectRescatado = elemento.getBoundingClientRect();
         helicoptero.style.left = rectRescatado.left + "px";
         helicoptero.style.top = rectRescatado.top + "px";
 
@@ -258,24 +259,32 @@
 
     // Función para mover el helicóptero a la base derecha al hacer clic
     function moverHelicopteroABase(direccion) {
-        const helicoptero = document.querySelector('.helicoptero');
-        const baseDerecha = document.querySelector('.base-right');
+        var helicoptero = document.querySelector('.helicoptero');
+        var baseDerecha = document.querySelector('.base-right');
+        var baseIzquierda = document.querySelector('.base-left');
         
         // Si la dirección es 'right', usamos la imagen de derecha; de lo contrario, la de izquierda.
         if(direccion === 'right'){
           helicoptero.classList.add('helicoptero-derecha');
           helicoptero.classList.remove('helicoptero-izquierda');
+          
+          // Obtener la posición de la base derecha
+          let rectBase = baseDerecha.getBoundingClientRect();
+          
+          // Posición final para el helicóptero (parte inferior derecha de la base)
+          var destinoX = rectBase.left + rectBase.width - helicoptero.offsetWidth + 50;
+          var destinoY = rectBase.top + rectBase.height - helicoptero.offsetHeight - 50;
         } else {
           helicoptero.classList.add('helicoptero-izquierda');
           helicoptero.classList.remove('helicoptero-derecha');
+          
+          // Obtener la posición de la base izquierda
+          let rectBase = baseIzquierda.getBoundingClientRect();
+          
+          // Posición final para el helicóptero (parte inferior izquierda de la base)
+          var destinoX = rectBase.left + rectBase.width - helicoptero.offsetWidth + 50;
+          var destinoY = rectBase.top + rectBase.height - helicoptero.offsetHeight - 50;
         }
-        
-        // Obtener la posición de la base derecha
-        const rectBase = baseDerecha.getBoundingClientRect();
-        
-        // Posición final para el helicóptero (parte inferior derecha de la base)
-        const destinoX = rectBase.left + rectBase.width - helicoptero.offsetWidth + 50;
-        const destinoY = rectBase.top + rectBase.height - helicoptero.offsetHeight - 50;
       
         // Se mueve el helicóptero a la base
         helicoptero.style.transition = 'left 10s ease, top 10s ease';
@@ -291,17 +300,17 @@
           // Opcional: cuando termina el movimiento, quitar las clases para restablecer la imagen original
           helicoptero.classList.remove('helicoptero-derecha', 'helicoptero-izquierda');
         }, 10000);  // 10 segundos, que es el tiempo de la transición
-      }
+    }
       
     // Función para iniciar el juego
     function iniciarJuego() {
       document.getElementById('intro').style.display = 'none';
       setInterval(generarSupervivientes, 5000);
-      const helicoptero = document.createElement('div');
+      var helicoptero = document.createElement('div');
       helicoptero.className = 'helicoptero';
       document.body.insertAdjacentElement('beforeend', helicoptero);
 
-      const sonidoHelicoptero = document.getElementById('helicopteroAudio');
+      var sonidoHelicoptero = document.getElementById('helicopteroAudio');
       if (sonidoHelicoptero) {
         sonidoHelicoptero.play();
       } else {
