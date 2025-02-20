@@ -58,16 +58,25 @@
     }
 
     .helicoptero {
-      width: 200px;
-      height: 90px;
-      background-image: url('img/helicoptero7.gif');
-      background-size: cover;
-      position: absolute;
-      bottom: 60px;
-      left: 50px;
-      z-index: 2;
-      transition: left 5s ease, top 5s ease;
-    }
+        width: 200px;
+        height: 90px;
+        background-image: url('img/helicoptero7.gif');
+        background-size: cover;
+        position: absolute;
+        bottom: 60px;
+        left: 50px;
+        z-index: 2;
+        transition: left 5s ease, top 5s ease;
+      }
+      
+      .helicoptero-derecha {
+        background-image: url('img/derecha.gif');
+      }
+      
+      .helicoptero-izquierda {
+        background-image: url('img/izquierda.gif');
+      }
+      
 
     @keyframes moverHelicoptero {
       0% { 
@@ -114,7 +123,7 @@
     
     .base-right {
       right: 50px;
-      background-image: url('img/base1.png');
+      background-image: url('img/base2.png');
       cursor: pointer;
     }
   </style>
@@ -188,7 +197,7 @@
       let intentos = 0;
       let colision = true;
 
-      while (colision && intentos < 50) {
+      while (colision && intentos < 150) {
         const x = Math.random() * (window.innerWidth - ancho);
         const y = Math.random() * ((window.innerHeight / 2) - alto) + (window.innerHeight / 2);
 
@@ -248,31 +257,42 @@
     }
 
     // Función para mover el helicóptero a la base derecha al hacer clic
-    function moverHelicopteroABase(base) {
-      const helicoptero = document.querySelector('.helicoptero');
-      const baseDerecha = document.querySelector('.base-right');
+    function moverHelicopteroABase(direccion) {
+        const helicoptero = document.querySelector('.helicoptero');
+        const baseDerecha = document.querySelector('.base-right');
+        
+        // Si la dirección es 'right', usamos la imagen de derecha; de lo contrario, la de izquierda.
+        if(direccion === 'right'){
+          helicoptero.classList.add('helicoptero-derecha');
+          helicoptero.classList.remove('helicoptero-izquierda');
+        } else {
+          helicoptero.classList.add('helicoptero-izquierda');
+          helicoptero.classList.remove('helicoptero-derecha');
+        }
+        
+        // Obtener la posición de la base derecha
+        const rectBase = baseDerecha.getBoundingClientRect();
+        
+        // Posición final para el helicóptero (parte inferior derecha de la base)
+        const destinoX = rectBase.left + rectBase.width - helicoptero.offsetWidth + 50;
+        const destinoY = rectBase.top + rectBase.height - helicoptero.offsetHeight - 50;
       
-      // Obtener la posición de la base derecha
-      const rectBase = baseDerecha.getBoundingClientRect();
+        // Se mueve el helicóptero a la base
+        helicoptero.style.transition = 'left 10s ease, top 10s ease';
+        helicoptero.style.left = `${destinoX}px`;
+        helicoptero.style.top = `${destinoY}px`;
       
-      // Posición final para el helicóptero (parte inferior derecha de la base)
-      const destinoX = rectBase.left + rectBase.width - helicoptero.offsetWidth+50;
-      const destinoY = rectBase.top + rectBase.height - helicoptero.offsetHeight-50;
-
-      // Se mueve el helicóptero a la base
-      helicoptero.style.transition = 'left 10s ease, top 10s ease';
-      helicoptero.style.left = `${destinoX}px`;
-      helicoptero.style.top = `${destinoY}px`;
-
-      helicopteroEnVuelo = true;
+        helicopteroEnVuelo = true;
+        
+        // Quitar transición después de que termine el movimiento
+        setTimeout(() => {
+          helicoptero.style.transition = '';
+          helicopteroEnVuelo = false;
+          // Opcional: cuando termina el movimiento, quitar las clases para restablecer la imagen original
+          helicoptero.classList.remove('helicoptero-derecha', 'helicoptero-izquierda');
+        }, 10000);  // 10 segundos, que es el tiempo de la transición
+      }
       
-      // Quitar transición después de que termine el movimiento
-      setTimeout(() => {
-        helicoptero.style.transition = '';
-        helicopteroEnVuelo = false;
-      }, 10000);  // 10 segundos, que es el tiempo de la transición
-    }
-
     // Función para iniciar el juego
     function iniciarJuego() {
       document.getElementById('intro').style.display = 'none';
@@ -282,7 +302,11 @@
       document.body.insertAdjacentElement('beforeend', helicoptero);
 
       const sonidoHelicoptero = document.getElementById('helicopteroAudio');
-      sonidoHelicoptero.play();
+      if (sonidoHelicoptero) {
+        sonidoHelicoptero.play();
+      } else {
+        console.error('Elemento de audio no encontrado');
+      }
     }
   </script>
 </body>
